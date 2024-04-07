@@ -33,42 +33,45 @@ class obj():
 
 class player(obj):
     def __init__(self, screen):
+        self.jumping = False
         self.screen = screen
         self.velocity = [0, 0]
         self.weight = 8
-        self.gravity = 0.05
+        self.gravity = 0.001
         self.on_ground = False
 
-        super().__init__(r"./recorces/000080_Navy_Blue_Square.svg" ,screen)
+        super().__init__(r"./recorces/player.gif" ,screen)
        
     def move(self, x = None, y = None):
-        self.velocity[0] = x if x != None else self.velocity[0]
-        self.velocity[1] = y if y != None else self.velocity[1]
-        pygame.display.flip()
+        self.velocity[0] += x if x != None else self.velocity[0]
+        self.velocity[1] += y if y != None else self.velocity[1]
     
     def fall(self):
-        if not self.on_ground:
-            if self.velocity[1] >= 0:
-                if self.velocity[1] <= self.weight:
-                    self.move(y = self.velocity[1] + self.gravity)
+        if self.on_ground & ( self.velocity[1] > 0 ):
+            self.velocity[1] = 0
         else:
-            self.move(y = 0)
-            if 0 < self.velocity[0]: 
-                self.velocity[0] -= .1
-            else:
-                self.velocity[0] = 0
+            self.move(y= self.gravity)
+    
+    def friction(self):
+        if self.on_ground & ( self.velocity[0] > 0.0 ):
+            print(self.velocity)
+            self.velocity[0] /= 1.5
+        if self.velocity[0] < 0.001:
+            self.velocity[0] = 0
         
     def update(self):
-        self.on_ground = self.check_colision(solids)
+        self.on_ground = len( self.check_colision(solids) ) > 0
+        self.fall()
         self.x += self.velocity[0]
         self.y += self.velocity[1]
         self.colision.move(self.velocity[0], self.velocity[1])
-        self.fall()
         self.make_on_pos(self.x, self.y)
+        self.friction()
+    
     
 class ground(obj):
     def __init__(self, screen):
-        super().__init__(r"./recorces/000080_Navy_Blue_Square.svg" ,screen)
+        super().__init__(r"./recorces/player.gif" ,screen)
         self.pos_on_list = len(solids)
         solids.append(self.colision)
         
@@ -101,12 +104,12 @@ while running:
     p.update()
     for event in pygame.event.get():
         
-        if event.type == pygame.MOUSEMOTION:
-            if p.on_ground:
-                p.move(2) 
-        if event.type == pygame.MOUSEBUTTONUP:
-            if p.on_ground:
-                p.move(y=-100)
+        if p.on_ground:
+            if pygame.mouse.get_pressed()[0]:
+                p.velocity[0] = 1
+            elif pygame.mouse.get_pressed()[2]:
+                p.move(y=-0.5)
         if event.type == pygame.QUIT:
             running = False
+    pygame.display.flip()
 
