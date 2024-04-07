@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 import pygame
-
 solids = []
+obj_list = []
 
-class obj():
+
+class template_obj():
     def __init__(self, img, screen):
         self.IMG = img
         self.screen = screen
@@ -31,13 +32,12 @@ class obj():
         return self.colision.collidelistall(rect_list)
 
 
-class player(obj):
+class player(template_obj):
     def __init__(self, screen):
         self.jumping = False
         self.screen = screen
         self.velocity = [0, 0]
-        self.weight = 8
-        self.gravity = 0.001
+        self.gravity = 0.003
         self.on_ground = False
 
         super().__init__(r"./recorces/player.gif" ,screen)
@@ -56,7 +56,7 @@ class player(obj):
         if self.on_ground & ( self.velocity[0] > 0.0 ):
             print(self.velocity)
             self.velocity[0] /= 1.5
-        if self.velocity[0] < 0.001:
+        if self.velocity[0] < self.gravity:
             self.velocity[0] = 0
         
     def update(self):
@@ -69,7 +69,7 @@ class player(obj):
         self.friction()
     
     
-class ground(obj):
+class ground(template_obj):
     def __init__(self, screen):
         super().__init__(r"./recorces/player.gif" ,screen)
         self.pos_on_list = len(solids)
@@ -80,19 +80,40 @@ class ground(obj):
         self.make_on_pos(self.x, self.y)
     
 
+levels = {0 : [
+    {'obj': ground, 'pos': (0, 700), 'size': (1000, 100)},
+    {'obj': player, 'pos':(10, 600), 'size': (100, 100)}
+               ]
+}
+
 
 pygame.init()
 
+def update_obj_on_lvl():
+    for objec in obj_list:
+        objec.update()
+
+
 screen = pygame.display.set_mode((1000, 800))
 
-p = player(screen=screen)
-p.scale(100, 100)
-p.make_on_pos(10, 10)        
 
-g = ground(screen=screen)
+# p = player(screen=screen)
+# p.scale(100, 100)
+# p.make_on_pos(10, 10)        
 
-g.scale(1000, 100)
-g.make_on_pos(0, 700)
+# g = ground(screen=screen)
+
+# g.scale(1000, 100)
+# g.make_on_pos(0, 700)
+for lvl in levels[0]:
+
+    objec = lvl["obj"](screen)
+    if player.__name__ == lvl["obj"].__name__:
+        p = objec
+    objec.make_on_pos(*lvl["pos"])
+    objec.scale(*lvl["size"])
+    obj_list.append(objec)
+    objec.update()
 
 running = True
 
@@ -100,15 +121,14 @@ pygame.display.flip()
 
 while running:
     screen.fill("black")
-    g.update()
-    p.update()
+    update_obj_on_lvl()
+    if pygame.mouse.get_pressed()[0]:
+        p.velocity[0] = 1
     for event in pygame.event.get():
-        
-        if p.on_ground:
-            if pygame.mouse.get_pressed()[0]:
-                p.velocity[0] = 1
-            elif pygame.mouse.get_pressed()[2]:
-                p.move(y=-0.5)
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if p.on_ground:
+                if pygame.mouse.get_pressed()[2]:
+                    p.move(y=-0.5)
         if event.type == pygame.QUIT:
             running = False
     pygame.display.flip()
