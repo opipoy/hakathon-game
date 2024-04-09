@@ -99,7 +99,7 @@ g.make_on_pos(0, 700)
 running = True
 
 pygame.display.flip()
-
+#hgrkhyukghiujk
 while running:
     screen.fill("black")
     g.update()
