@@ -31,6 +31,8 @@ class obj():
         return self.colision.collidelistall(rect_list)
 
 
+
+
 class player(obj):
     def __init__(self, screen):
         self.jumping = False
