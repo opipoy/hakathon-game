@@ -99,19 +99,23 @@ g.make_on_pos(0, 700)
 running = True
 
 pygame.display.flip()
-#hgrkhyukghiujk
+
 while running:
     screen.fill("black")
     g.update()
     p.update()
+    
     for event in pygame.event.get():
-        
+        key = pygame.key.get_pressed()
         if p.on_ground:
             if pygame.mouse.get_pressed()[0]:
                 p.velocity[0] = 1
-            elif pygame.mouse.get_pressed()[2]:
+            if key[pygame.K_a] == True:
+                p.velocity[0] = 1
+            
+            elif key[pygame.K_SPACE]:
                 p.move(y=-0.5)
+
         if event.type == pygame.QUIT:
             running = False
     pygame.display.flip()
-
