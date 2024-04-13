@@ -45,17 +45,19 @@ pygame.display.flip()
 while running:
     screen.fill("black")
     update_obj_on_lvl()
-    if pygame.mouse.get_pressed()[0]:
+    key = pygame.key.get_pressed()
+    if key[pygame.K_RIGHT]:
         for p in players:
             p.velocity[0] = 1
-    if pygame.mouse.get_pressed()[1]:
+    if key[pygame.K_LEFT]:
         for p in players:
             p.velocity[0] = -1
     for event in pygame.event.get():
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.KEYDOWN:
             for p in players:
+                key = pygame.key.get_pressed()
                 if p.on_ground:
-                    if pygame.mouse.get_pressed()[2]:
+                    if key[pygame.K_UP]:
                             p.move(y=-0.5)
         if event.type == pygame.QUIT:
             running = False
