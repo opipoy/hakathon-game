@@ -55,7 +55,6 @@ while running:
             for p in players:
                 key = pygame.key.get_pressed()
                 if p.on_ground:
-                    print(p.on_ground)
                     if key[pygame.K_SPACE]:
                             p.velocity[1] = -20 - p.weight/50
         if event.type == pygame.QUIT:
