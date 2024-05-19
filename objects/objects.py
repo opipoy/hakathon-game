@@ -90,7 +90,8 @@ class ground(template_obj):
         pygame.draw.rect(self.screen, "yellow", self.colisions["sprite"])
 
 def game_over(screen):
-    imp = pygame.image.load(r"D:\Users\user\Downloads\hakathon-game-Ofeks\recorces\game over.jpg").convert()
+    clear_objects()
+    imp = pygame.image.load(r"./recorces/game over.jpg").convert()
     pygame.display.set_mode((imp.get_width(),imp.get_height()))
     screen.blit(imp, (0,0))
     pygame.display.flip()
@@ -99,4 +100,24 @@ def game_over(screen):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+
+def clear_objects():
+    global solids, players, obj_list
+    obj_list.empty()
+    solids.empty()
+    players.empty()
+
+def load_level(screen, level:dict):
+    clear_objects()
+    for lvl in level:
+        objec = lvl["obj"](screen=screen, **lvl["options"] if "options" in lvl else {})
+        objec.rect.x, objec.rect.y = lvl["pos"]
+        objec.scale(*lvl["size"])
+        obj_list.add(objec)
+
+def update_obj_on_lvl(screen):
+    global dt
+    obj_list.update()
+    obj_list.draw(screen)
 
