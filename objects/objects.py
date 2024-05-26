@@ -67,7 +67,7 @@ class player(template_obj):
         self.touching_grounds = []
         self.pos_on_list = len(solids)
         super().__init__(r"./recorces/player.gif", screen)
-        col_size = 0.5
+        col_size = 0.7
         self.template_colisions["vertical"] = ((self.rect.w/col_size)/2, 0, -self.rect.w/col_size, 0)
         self.template_colisions["horizontal"] = (0, (self.rect.h/col_size)/2, 0, -self.rect.h/col_size)
         self.make_colisions()
