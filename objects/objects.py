@@ -4,15 +4,32 @@ players = pygame.sprite.Group()
 obj_list = pygame.sprite.Group()
 clock = pygame.time.Clock()
 dt = 0
+show_col = True
+
+
+class colision(pygame.sprite.Sprite):
+    def __init__(self, rect):
+        super().__init__()
+        self.rect = rect
+
+    def update_rect(self, rect):
+        self.rect = rect
 
 
 class template_obj(pygame.sprite.Sprite):
     def make_colisions(self):
         for colision_name in self.template_colisions.keys():
             template = self.template_colisions[colision_name]
-            colision = pygame.Rect(self.rect.x + template[0], self.rect.y + template[1], self.rect.w + template[2], self.rect.h + template[3])
-            pygame.draw.rect(self.screen, "blue", colision)
-            self.colisions[colision_name] = colision
+            rect = pygame.Rect(self.rect.x + template[0], self.rect.y + template[1], self.rect.w + template[2], self.rect.h + template[3])
+            col = colision(rect)
+            self.colisions[colision_name] = col
+
+    def update_colisions(self):
+        for name, col in self.colisions.items():
+            template = self.template_colisions[name]
+            rect = pygame.Rect(self.rect.x + template[0], self.rect.y + template[1], self.rect.w + template[2], self.rect.h + template[3])
+            pygame.draw.rect(self.screen, "orange", rect)
+            col.update_rect(rect)
 
     def __init__(self, img, screen):
         super().__init__()
@@ -24,14 +41,21 @@ class template_obj(pygame.sprite.Sprite):
         self.rect.w = self.image.get_width()
         self.rect.x, self.rect.y = 0, 0
         self.colisions = {}
-        #                                     x  y  w  h
         self.template_colisions = {'sprite': (0, 0 ,0 ,0)}
         self.make_colisions()
 
     def scale(self, width, height):
         self.rect.w, self.rect.h = width, height
         self.image = pygame.transform.scale(self.image, (width, height))
-        self.make_colisions()
+        self.update_colisions()
+
+    def check_collisions(self, spritegroup):
+        colides_with = {}
+        for key, item in self.colisions.items():
+            for sprite in spritegroup:
+                if sprite.rect.colliderect(item):
+                    colides_with[key] = sprite
+        return colides_with
 
 class player(template_obj):
     def __init__(self, screen, speed = 0, density = 0, gravity = 0,):
@@ -43,6 +67,10 @@ class player(template_obj):
         self.touching_grounds = []
         self.pos_on_list = len(solids)
         super().__init__(r"./recorces/player.gif", screen)
+        col_size = 0.5
+        self.template_colisions["vertical"] = ((self.rect.w/col_size)/2, 0, -self.rect.w/col_size, 0)
+        self.template_colisions["horizontal"] = (0, (self.rect.h/col_size)/2, 0, -self.rect.h/col_size)
+        self.make_colisions()
         self.density = density or 0.1
         self.weight = self.rect.w * self.rect.h * self.density
         players.add(self)
@@ -53,8 +81,8 @@ class player(template_obj):
     
     def fall(self):
         if self.on_ground & ( self.velocity[1] >= 0 ):
-            ground_y =  self.touching_grounds[0].rect.y
-            y =  self.rect.y
+            ground_y = self.touching_grounds["vertical"].rect.y
+            y = self.rect.y
             h = self.rect.h
             self.rect.y = ground_y - h+0.5
             self.velocity[1] = 0
@@ -70,16 +98,20 @@ class player(template_obj):
             self.velocity[0] = 0
         
     def update(self):
-        #solids.append(self.colisions["sprite"])
-        self.touching_grounds = pygame.sprite.spritecollide(self, solids, False)
-        self.on_ground = len( self.touching_grounds ) > 0
+        # solids.add(self.colisions["sprite"])
+        self.touching_grounds = self.check_collisions(solids)
+        self.on_ground = "vertical" in self.touching_grounds.keys()
+        print(self.touching_grounds)
         self.fall()
         self.friction()
         self.weight = self.rect.w * self.rect.h * self.density
-        self.rect.x += self.velocity[0]
+        # TODO: for now its moving backwards... mabe make it move the colision first and then check
+        if "horizontal" in self.touching_grounds:
+            self.rect.x -= self.velocity[0]
+        else:
+            self.rect.x += self.velocity[0]
         self.rect.y += self.velocity[1]
-        pygame.draw.rect(self.screen, "green", self.rect)
-        pygame.draw.rect(self.screen, "yellow", self.colisions["sprite"])
+        self.update_colisions()
 
 class ground(template_obj):
     def __init__(self, screen):
