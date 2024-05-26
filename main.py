@@ -4,9 +4,8 @@ from objects import *
 
 levels = {0 : [
     {'obj': ground, 'pos': (0, 700), 'size': (500, 50)},
-    #{'obj': inviz_ground, 'pos': (500, 700), 'size': (100, 100)},
+    {'obj': ground, 'pos': (300, 500), 'size': (50, 200)},
     {'obj': player, 'pos':(0, 250), 'size': (100, 100)},
-   {'obj': player, 'pos': (200, 10), 'size': (10, 10)}
                ]
 }
 
