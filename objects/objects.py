@@ -28,7 +28,6 @@ class template_obj(pygame.sprite.Sprite):
         for name, col in self.colisions.items():
             template = self.template_colisions[name]
             rect = pygame.Rect(self.rect.x + template[0], self.rect.y + template[1], self.rect.w + template[2], self.rect.h + template[3])
-            pygame.draw.rect(self.screen, "orange", rect)
             col.update_rect(rect)
 
     def __init__(self, img, screen):
@@ -67,7 +66,7 @@ class player(template_obj):
         self.touching_grounds = []
         self.pos_on_list = len(solids)
         super().__init__(r"./recorces/player.gif", screen)
-        col_size = 0.5
+        col_size = 5
         self.template_colisions["vertical"] = ((self.rect.w/col_size)/2, 0, -self.rect.w/col_size, 0)
         self.template_colisions["horizontal"] = (0, (self.rect.h/col_size)/2, 0, -self.rect.h/col_size)
         self.make_colisions()
@@ -99,19 +98,35 @@ class player(template_obj):
         
     def update(self):
         # solids.add(self.colisions["sprite"])
-        self.touching_grounds = self.check_collisions(solids)
-        self.on_ground = "vertical" in self.touching_grounds.keys()
-        print(self.touching_grounds)
+        self.colisions["horizontal"].rect.x += self.velocity[0]
+        self.colisions["vertical"].rect.y += self.velocity[1]
         self.fall()
         self.friction()
         self.weight = self.rect.w * self.rect.h * self.density
-        # TODO: for now its moving backwards... mabe make it move the colision first and then check
-        if "horizontal" in self.touching_grounds:
-            self.rect.x -= self.velocity[0]
-        else:
-            self.rect.x += self.velocity[0]
+        self.touching_grounds = self.check_collisions(solids)
+        self.on_ground = "vertical" in self.touching_grounds.keys()
+        name_touching_ground = self.touching_grounds.keys()
+        if "horizontal" in name_touching_ground:
+            w = self.rect.w
+            ground_x = self.touching_grounds["horizontal"].rect.x
+            # is before or after obsticle?
+            if ( self.rect.x + self.rect.w -ground_x <= 0 ):
+                self.rect.x = ground_x-w
+            else:
+                ground_w = self.touching_grounds["horizontal"].rect.w
+                self.rect.x = ground_x+ground_w
+            self.velocity[0] = 0
+        if "vertical" in name_touching_ground:
+            h = self.rect.h
+            ground_y = self.touching_grounds["vertical"].rect.y
+            self.rect.y = ground_y - h+0.5
+            self.velocity[1] = 0
         self.rect.y += self.velocity[1]
+        self.rect.x += self.velocity[0]
         self.update_colisions()
+        pygame.draw.rect(self.screen, "orange", self.colisions["vertical"])
+        pygame.draw.rect(self.screen, "green", self.colisions["horizontal"])
+        
 
 class ground(template_obj):
     def __init__(self, screen):
