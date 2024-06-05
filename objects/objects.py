@@ -3,6 +3,7 @@ solids = pygame.sprite.Group()
 players = pygame.sprite.Group()
 obj_list = pygame.sprite.Group()
 clock = pygame.time.Clock()
+btn = {}  # id: list of grounds
 dt = 0
 show_col = True
 lvl = 0
@@ -68,6 +69,7 @@ class player(template_obj):
         self.pos_on_list = len(solids)
         super().__init__(image, screen)
         col_size = 5
+        self.falling = False
 
         self.template_colisions["vertical"] = ((self.rect.w/col_size)/2, 0, -self.rect.w/col_size, 0)
         self.template_colisions["horizontal"] = (0, (self.rect.h/col_size)/2, 0, -self.rect.h/col_size)
@@ -82,15 +84,18 @@ class player(template_obj):
         self.velocity[1] += y
     
     def fall(self):
-        if self.on_ground & ( self.velocity[1] >= 0 ):
+        self.falling = False
+        if self.on_ground and ( self.velocity[1] >= 0 ):
             ground_y = self.touching_grounds["vertical"].rect.y
             y = self.rect.y
             h = self.rect.h
             self.rect.y = ground_y - h+0.5
             self.velocity[1] = 0
         elif self.velocity[1] <= self.weight:
+            self.falling = True
             self.move(y= self.gravity*dt^2)
         else:
+            self.falling = True
             self.velocity[1] = self.weight
     
     def friction(self):
@@ -124,16 +129,25 @@ class player(template_obj):
         if "vertical" in name_touching_ground:
             h = self.rect.h
             ground_y = self.touching_grounds["vertical"].rect.y
-            self.rect.y = ground_y - h+0.5
-            self.velocity[1] = 0
+            if not players.has(self.touching_grounds["vertical"]):
+                self.rect.y = ground_y - h+0.5
+                self.velocity[1] = 0
+            elif self.falling:
+                self.velocity[1] = 0
         self.rect.y += self.velocity[1]
         self.rect.x += self.velocity[0]
         self.update_colisions()
         
 
 class ground(template_obj):
-    def __init__(self, screen, image= r"./recorces/ground.jpg"):
+    def __init__(self, screen, image= r"./recorces/ground.jpg", btn_id=None):
         super().__init__(image, screen)
+        if btn_id is not None:
+            global btn
+            if btn_id in btn:
+                btn[btn_id].append(self)
+            else:
+                btn[ btn_id  ]= [self]
         solids.add(self)
 
     def update(self):
@@ -154,6 +168,20 @@ class win_flag(template_obj):
         if len(colides_player.keys()) > 0:
             load_level(self.screen, self.next_lvl)
 
+class open_button(template_obj):
+    def __init__(self, screen, image = r"recorces/button.png", btn_id = None):
+        self.destroyes_id = btn_id
+        if btn_id == None:
+            raise KeyError("you did not set btn_id in options. like that: 'options':{btn_id:[your id]}")
+        super().__init__(image, screen)
+    def update(self):
+        colides_player = self.check_collisions(players)
+        if len(colides_player.keys()) > 0:
+            for b in btn[self.destroyes_id]:
+                b.kill()
+                b.remove()
+
+        
 
 def game_over(screen):
     clear_objects()
