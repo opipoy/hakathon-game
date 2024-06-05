@@ -5,6 +5,7 @@ obj_list = pygame.sprite.Group()
 clock = pygame.time.Clock()
 dt = 0
 show_col = True
+lvl = 0
 
 
 class colision(pygame.sprite.Sprite):
@@ -57,7 +58,7 @@ class template_obj(pygame.sprite.Sprite):
         return colides_with
 
 class player(template_obj):
-    def __init__(self, screen, speed = 0, density = 0, gravity = 0,):
+    def __init__(self, screen, speed = 0, density = 0, gravity = 0, image= r"./recorces/player.gif"):
         self.jumping = False
         self.screen = screen
         self.velocity = [0, 0]
@@ -65,8 +66,7 @@ class player(template_obj):
         self.on_ground = False
         self.touching_grounds = []
         self.pos_on_list = len(solids)
-        super().__init__(r"./recorces/player.gif", screen)
-        
+        super().__init__(image, screen)
         col_size = 5
 
         self.template_colisions["vertical"] = ((self.rect.w/col_size)/2, 0, -self.rect.w/col_size, 0)
@@ -126,17 +126,31 @@ class player(template_obj):
         self.rect.y += self.velocity[1]
         self.rect.x += self.velocity[0]
         self.update_colisions()
-        pygame.draw.rect(self.screen, "orange", self.colisions["vertical"])
-        pygame.draw.rect(self.screen, "green", self.colisions["horizontal"])
         
 
 class ground(template_obj):
-    def __init__(self, screen):
-        super().__init__(r"./recorces/player.gif", screen)
+    def __init__(self, screen, image= r"./recorces/ground.png"):
+        super().__init__(image, screen)
         solids.add(self)
 
     def update(self):
-        pygame.draw.rect(self.screen, "yellow", self.colisions["sprite"])
+        #update on need
+        pass
+
+class win_flag(template_obj):
+    def __init__(self, screen, next_lvl=None, image=r"./recorces/flag.png"):
+        self.screen = screen
+        if next_lvl == None:
+            raise KeyError("you did not set next_lvl in options. like that: 'options':{next_lvl:[your level]}")
+        self.next_lvl = next_lvl
+        super().__init__(image, screen)
+
+    def update(self):
+        global lvl
+        colides_player = self.check_collisions(players)
+        if len(colides_player.keys()) > 0:
+            load_level(self.screen, self.next_lvl)
+
 
 def game_over(screen):
     clear_objects()
@@ -169,4 +183,11 @@ def update_obj_on_lvl(screen):
     global dt
     obj_list.update()
     obj_list.draw(screen)
+
+def init_game(levels):
+    for i in levels.keys():
+        lan = len(levels[i])
+        last_obj = levels[i][lan-1]
+        if last_obj['obj'].__name__ == "win_flag":
+            last_obj["options"]= {'next_lvl': levels[i+1]}
 
