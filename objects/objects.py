@@ -62,7 +62,7 @@ class player(template_obj):
         self.jumping = False
         self.screen = screen
         self.velocity = [0, 0]
-        self.gravity = gravity or 2
+        self.gravity = gravity or 4
         self.on_ground = False
         self.touching_grounds = []
         self.pos_on_list = len(solids)
@@ -75,6 +75,7 @@ class player(template_obj):
         self.density = density or 0.1
         self.weight = self.rect.w * self.rect.h * self.density
         players.add(self)
+        solids.add(self)
        
     def move(self, x = 0, y = 0):
         self.velocity[0] += x
@@ -88,7 +89,7 @@ class player(template_obj):
             self.rect.y = ground_y - h+0.5
             self.velocity[1] = 0
         elif self.velocity[1] <= self.weight:
-            self.move(y= 4*dt^2)
+            self.move(y= self.gravity*dt^2)
         else:
             self.velocity[1] = self.weight
     
@@ -105,7 +106,9 @@ class player(template_obj):
         self.fall()
         self.friction()
         self.weight = self.rect.w * self.rect.h * self.density
-        self.touching_grounds = self.check_collisions(solids)
+        s = solids.copy()
+        s.remove(self)
+        self.touching_grounds = self.check_collisions(s)
         self.on_ground = "vertical" in self.touching_grounds.keys()
         name_touching_ground = self.touching_grounds.keys()
         if "horizontal" in name_touching_ground:
@@ -129,7 +132,7 @@ class player(template_obj):
         
 
 class ground(template_obj):
-    def __init__(self, screen, image= r"./recorces/ground.png"):
+    def __init__(self, screen, image= r"./recorces/ground.jpg"):
         super().__init__(image, screen)
         solids.add(self)
 

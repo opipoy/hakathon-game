@@ -8,13 +8,20 @@ players_obj = [
         ]
 
 levels = {0 : [ *players_obj,
-               {'obj': ground, 'pos': (0, HEIGHT-50), 'size': (400, 50)},
-               {'obj': ground, 'pos': (550, HEIGHT - 50), 'size': (200, 50)},
-               {'obj': ground, 'pos': (0, HEIGHT-50), 'size': (400, 50)},
+               {'obj': ground, 'pos': (550, HEIGHT - 50), 'size': (300, 50)},#ריצפה ימינית
+               {'obj': ground, 'pos': (0, HEIGHT-50), 'size': (400, 50)},#ריצפה שמאלית
+               {'obj': ground, 'pos': (-1, 0 ), 'size': (1, HEIGHT)}, #זה חוסם שמאלי
+               {'obj': ground, 'pos': (WIDTH, 0 ), 'size': (1, HEIGHT)}, #זה חוסם ימני
                {'obj': win_flag, 'pos': (WIDTH-50, HEIGHT-100), 'size': (50, 50), },
                ],
           1 : [ *players_obj,
-               {'obj':ground, 'pos': (0, 50), 'size':(WIDTH, 50)}
+                {'obj': ground, 'pos': (0, HEIGHT-50), 'size': (300, 50)},#ריצפה שמאלית
+                {'obj': ground, 'pos': (420, HEIGHT-120), 'size': (200, 50)},#ריצפה עליונה
+                 {'obj': ground, 'pos': (300, HEIGHT-270), 'size': (200, 50)},#ריצפה עליונה
+                {'obj': ground, 'pos': (700, HEIGHT-180), 'size': (150, 50)},#ריצפה עליונה
+                {'obj': ground, 'pos': (0, HEIGHT-100), 'size': (300, 50)},#ריצפה שמאלית
+                {'obj': ground, 'pos': (-1, 0 ), 'size': (1, HEIGHT)}, #זה חוסם שמאלי
+               {'obj': ground, 'pos': (WIDTH, 0 ), 'size': (1, HEIGHT)}, #זה חוסם ימני
                ]
           }
 
@@ -24,9 +31,12 @@ init_game(levels)
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
-#יוצר אובייקים בשלב
+# creates start level
 load_level(screen, levels[0])
 running = True
+
+bg_img = pygame.image.load(r"./recorces/bg.jpg")
+bg_img = pygame.transform.scale(bg_img, (WIDTH, HEIGHT))
 
 pygame.display.flip()
 while running:
@@ -35,7 +45,7 @@ while running:
     players_list = players.sprites()
     # clears screen for next frame
 
-    screen.fill("black")
+    screen.blit(bg_img, (0,0))
     # draw objects
     update_obj_on_lvl(screen)
     key = pygame.key.get_pressed()
