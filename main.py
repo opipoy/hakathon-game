@@ -55,7 +55,7 @@ init_game(levels)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 # creates start level
-load_level(screen, levels[3])
+load_level(screen, levels[0])
 running = True
 
 bg_img = pygame.image.load(r"./recorces/bg.jpg")
