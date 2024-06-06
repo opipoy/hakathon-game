@@ -3,8 +3,10 @@ solids = pygame.sprite.Group()
 players = pygame.sprite.Group()
 obj_list = pygame.sprite.Group()
 clock = pygame.time.Clock()
+btn = {}  # id: list of grounds
 dt = 0
 show_col = True
+lvl = 0
 
 
 class colision(pygame.sprite.Sprite):
@@ -57,17 +59,17 @@ class template_obj(pygame.sprite.Sprite):
         return colides_with
 
 class player(template_obj):
-    def __init__(self, screen, speed = 0, density = 0, gravity = 0,):
+    def __init__(self, screen, speed = 0, density = 0, gravity = 0, image= r"./recorces/player.gif"):
         self.jumping = False
         self.screen = screen
         self.velocity = [0, 0]
-        self.gravity = gravity or 2
+        self.gravity = gravity or 4
         self.on_ground = False
         self.touching_grounds = []
         self.pos_on_list = len(solids)
-        super().__init__(r"./recorces/player.gif", screen)
-        
+        super().__init__(image, screen)
         col_size = 5
+        self.falling = False
 
         self.template_colisions["vertical"] = ((self.rect.w/col_size)/2, 0, -self.rect.w/col_size, 0)
         self.template_colisions["horizontal"] = (0, (self.rect.h/col_size)/2, 0, -self.rect.h/col_size)
@@ -75,21 +77,25 @@ class player(template_obj):
         self.density = density or 0.1
         self.weight = self.rect.w * self.rect.h * self.density
         players.add(self)
+        solids.add(self)
        
     def move(self, x = 0, y = 0):
         self.velocity[0] += x
         self.velocity[1] += y
     
     def fall(self):
-        if self.on_ground & ( self.velocity[1] >= 0 ):
+        self.falling = False
+        if self.on_ground and ( self.velocity[1] >= 0 ):
             ground_y = self.touching_grounds["vertical"].rect.y
             y = self.rect.y
             h = self.rect.h
             self.rect.y = ground_y - h+0.5
             self.velocity[1] = 0
         elif self.velocity[1] <= self.weight:
-            self.move(y= 4*dt^2)
+            self.falling = True
+            self.move(y= self.gravity*dt^2)
         else:
+            self.falling = True
             self.velocity[1] = self.weight
     
     def friction(self):
@@ -105,7 +111,9 @@ class player(template_obj):
         self.fall()
         self.friction()
         self.weight = self.rect.w * self.rect.h * self.density
-        self.touching_grounds = self.check_collisions(solids)
+        s = solids.copy()
+        s.remove(self)
+        self.touching_grounds = self.check_collisions(s)
         self.on_ground = "vertical" in self.touching_grounds.keys()
         name_touching_ground = self.touching_grounds.keys()
         if "horizontal" in name_touching_ground:
@@ -121,22 +129,59 @@ class player(template_obj):
         if "vertical" in name_touching_ground:
             h = self.rect.h
             ground_y = self.touching_grounds["vertical"].rect.y
-            self.rect.y = ground_y - h+0.5
-            self.velocity[1] = 0
+            if not players.has(self.touching_grounds["vertical"]):
+                self.rect.y = ground_y - h+0.5
+                self.velocity[1] = 0
+            elif self.falling:
+                self.velocity[1] = 0
         self.rect.y += self.velocity[1]
         self.rect.x += self.velocity[0]
         self.update_colisions()
-        pygame.draw.rect(self.screen, "orange", self.colisions["vertical"])
-        pygame.draw.rect(self.screen, "green", self.colisions["horizontal"])
         
 
 class ground(template_obj):
-    def __init__(self, screen):
-        super().__init__(r"./recorces/player.gif", screen)
+    def __init__(self, screen, image= r"./recorces/ground.jpg", btn_id=None):
+        super().__init__(image, screen)
+        if btn_id is not None:
+            global btn
+            if btn_id in btn:
+                btn[btn_id].append(self)
+            else:
+                btn[ btn_id  ]= [self]
         solids.add(self)
 
     def update(self):
-        pygame.draw.rect(self.screen, "yellow", self.colisions["sprite"])
+        #update on need
+        pass
+
+class win_flag(template_obj):
+    def __init__(self, screen, next_lvl=None, image=r"./recorces/flag.png"):
+        self.screen = screen
+        if next_lvl == None:
+            raise KeyError("you did not set next_lvl in options. like that: 'options':{next_lvl:[your level]}")
+        self.next_lvl = next_lvl
+        super().__init__(image, screen)
+
+    def update(self):
+        global lvl
+        colides_player = self.check_collisions(players)
+        if len(colides_player.keys()) > 0:
+            load_level(self.screen, self.next_lvl)
+
+class open_button(template_obj):
+    def __init__(self, screen, image = r"recorces/button.png", btn_id = None):
+        self.destroyes_id = btn_id
+        if btn_id == None:
+            raise KeyError("you did not set btn_id in options. like that: 'options':{btn_id:[your id]}")
+        super().__init__(image, screen)
+    def update(self):
+        colides_player = self.check_collisions(players)
+        if len(colides_player.keys()) > 0:
+            for b in btn[self.destroyes_id]:
+                b.kill()
+                b.remove()
+
+        
 
 def game_over(screen):
     clear_objects()
@@ -169,4 +214,11 @@ def update_obj_on_lvl(screen):
     global dt
     obj_list.update()
     obj_list.draw(screen)
+
+def init_game(levels):
+    for i in levels.keys():
+        lan = len(levels[i])
+        last_obj = levels[i][lan-1]
+        if last_obj['obj'].__name__ == "win_flag":
+            last_obj["options"]= {'next_lvl': levels[i+1]}
 
